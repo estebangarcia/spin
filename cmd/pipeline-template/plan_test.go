@@ -32,7 +32,7 @@ func TestPipelineTemplatePlan_basic(t *testing.T) {
 		t.Fatal("Could not create temp pipeline template file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline-template", "plan", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "plan", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 
 	currentCmd := NewPlanCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
@@ -63,7 +63,7 @@ func TestPipelineTemplatePlan_stdin(t *testing.T) {
 	defer func() { os.Stdin = oldStdin }()
 	os.Stdin = tempFile
 
-	args := []string{"pipeline-template", "plan", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "plan", "--gate.endpoint", ts.URL}
 	currentCmd := NewPlanCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -87,7 +87,7 @@ func TestPipelineTemplatePlan_fail(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline-template", "plan", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "plan", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewPlanCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -105,7 +105,7 @@ func TestPipelineTemplatePlan_flags(t *testing.T) {
 	ts := gateServerPlanSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "plan", "--gate-endpoint", ts.URL} // Missing pipeline config file and stdin.
+	args := []string{"pipeline-template", "plan", "--gate.endpoint", ts.URL} // Missing pipeline config file and stdin.
 	currentCmd := NewPlanCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -124,6 +124,9 @@ func TestPipelineTemplatePlan_flags(t *testing.T) {
 // and Accepts POST calls.
 func gateServerPlanSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "{}")
+	}))
 	mux.Handle("/v2/pipelineTemplates/plan", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			fmt.Fprintln(w, strings.TrimSpace(testPipelineTemplatePlanResp))

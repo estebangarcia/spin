@@ -22,6 +22,9 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/spf13/viper"
+	"github.com/spinnaker/spin/config"
+
 	"github.com/spinnaker/spin/util"
 
 	"github.com/spf13/cobra"
@@ -34,12 +37,13 @@ const (
 func getRootCmdForTest() *cobra.Command {
 	rootCmd := &cobra.Command{}
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.spin/config)")
-	rootCmd.PersistentFlags().String("gate-endpoint", "", "Gate (API server) endpoint. Default http://localhost:8084")
-	rootCmd.PersistentFlags().Bool("insecure", false, "Ignore Certificate Errors")
 	rootCmd.PersistentFlags().Bool("quiet", false, "Squelch non-essential output")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color")
 	rootCmd.PersistentFlags().String("output", "", "Configure output formatting")
-	rootCmd.PersistentFlags().String("default-headers", "", "Configure addtional headers for gate client requests")
+
+	flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
+	rootCmd.PersistentFlags().AddFlagSet(flagSet)
+	viper.BindPFlags(rootCmd.PersistentFlags())
 	util.InitUI(false, false, "")
 	return rootCmd
 }
@@ -53,7 +57,7 @@ func TestApplicationGet_basic(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "get", APP, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "get", APP, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -69,7 +73,7 @@ func TestApplicationGet_flags(t *testing.T) {
 	appCmd := NewApplicationCmd(os.Stdout)
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
-	args := []string{"application", "get", "--gate-endpoint", ts.URL} // Missing positional arg.
+	args := []string{"application", "get", "--gate.endpoint", ts.URL} // Missing positional arg.
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil { // Success is actually failure here, flags are malformed.
@@ -87,7 +91,7 @@ func TestApplicationGet_malformed(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "get", APP, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "get", APP, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil { // Success is actually failure here, return payload is malformed.
@@ -105,7 +109,7 @@ func TestApplicationGet_fail(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "get", APP, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "get", APP, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil { // Success is actually failure here, return payload is malformed.
@@ -116,16 +120,26 @@ func TestApplicationGet_fail(t *testing.T) {
 // testGateApplicationGetSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed pipeline list.
 func testGateApplicationGetSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/applications/"+APP, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(applicationJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 // testGateApplicationGetMalformed returns a malformed list of pipeline configs.
 func testGateApplicationGetMalformed() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/applications/"+APP, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(malformedApplicationGetJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 const malformedApplicationGetJson = `

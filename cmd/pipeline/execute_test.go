@@ -38,7 +38,7 @@ func TestPipelineExecute_basic(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "execute", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "execute", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewExecuteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -62,7 +62,7 @@ func TestPipelineExecute_fail(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "execute", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "execute", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewExecuteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -80,7 +80,7 @@ func TestPipelineExecute_flags(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "execute", "--gate-endpoint", ts.URL} // Missing pipeline app and name.
+	args := []string{"pipeline", "execute", "--gate.endpoint", ts.URL} // Missing pipeline app and name.
 	currentCmd := NewExecuteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -104,7 +104,7 @@ func TestPipelineExecute_missingname(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "execute", "--application", "app", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "execute", "--application", "app", "--gate.endpoint", ts.URL}
 	currentCmd := NewExecuteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -128,7 +128,7 @@ func TestPipelineExecute_missingapp(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "execute", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "execute", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewExecuteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -146,6 +146,9 @@ func TestPipelineExecute_missingapp(t *testing.T) {
 // to direct requests to. Responds with successful responses to pipeline execute API calls.
 func testGatePipelineExecuteSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
 	mux.Handle("/pipelines/app/one", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		resp := gate.ResponseEntity{StatusCode: "201 Accepted", StatusCodeValue: 201}
 		b, _ := json.Marshal(&resp)

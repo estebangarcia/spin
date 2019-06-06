@@ -17,10 +17,11 @@ package pipeline_template
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
-	"github.com/spinnaker/spin/util"
 	"net/http"
+
+	"github.com/spf13/cobra"
+	"github.com/spinnaker/spin/gateclient"
+	"github.com/spinnaker/spin/util"
 )
 
 type PlanOptions struct {
@@ -52,7 +53,7 @@ func NewPlanCmd(pipelineTemplateOptions pipelineTemplateOptions) *cobra.Command 
 }
 
 func planPipelineTemplate(cmd *cobra.Command, options PlanOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

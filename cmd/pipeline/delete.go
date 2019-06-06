@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -32,8 +32,8 @@ type DeleteOptions struct {
 }
 
 var (
-	deletePipelineShort   = "Delete the provided pipeline"
-	deletePipelineLong    = "Delete the provided pipeline"
+	deletePipelineShort = "Delete the provided pipeline"
+	deletePipelineLong  = "Delete the provided pipeline"
 )
 
 func NewDeleteCmd(pipelineOptions pipelineOptions) *cobra.Command {
@@ -57,7 +57,7 @@ func NewDeleteCmd(pipelineOptions pipelineOptions) *cobra.Command {
 }
 
 func deletePipeline(cmd *cobra.Command, options DeleteOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

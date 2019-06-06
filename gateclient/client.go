@@ -29,17 +29,15 @@ import (
 	_ "net/http/pprof"
 	"net/url"
 	"os"
-	"os/user"
-	"path/filepath"
 	"strings"
 
 	"github.com/spinnaker/spin/config"
+	"github.com/spinnaker/spin/config/auth"
 	iap "github.com/spinnaker/spin/config/auth/iap"
 	"github.com/spinnaker/spin/util"
 	"github.com/spinnaker/spin/version"
 
 	"github.com/mitchellh/go-homedir"
-	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v2"
 
 	"crypto/sha256"
@@ -94,22 +92,41 @@ func (m *GatewayClient) GateEndpoint() string {
 	return m.Config.Gate.Endpoint
 }
 
-// Create new spinnaker gateway client with flag
-func NewGateClient(flags *pflag.FlagSet) (*GatewayClient, error) {
-	err := configureOutput(flags)
+func (m *GatewayClient) determineAuthMethod() {
+	authConfig := m.Config.Auth
+	if authConfig.Method != "" || !authConfig.Enabled {
+		return
+	}
+
+	if authConfig.X509.IsValid() {
+		authConfig.Method = auth.X509
+	} else if authConfig.OAuth2.IsValid() {
+		authConfig.Method = auth.OAuth2
+	} else if authConfig.Ldap.IsValid() {
+		authConfig.Method = auth.Ldap
+	} else if authConfig.Basic.IsValid() {
+		authConfig.Method = auth.Basic
+	} else if authConfig.Iap.IsValid() {
+		authConfig.Method = auth.Iap
+	} else {
+		authConfig.Method = auth.Google
+	}
+
+}
+
+// NewGateClientWithConfig - Create new GateClient using provided config
+func NewGateClientWithConfig(config config.Config) (*GatewayClient, error) {
+
+	if util.UI == nil {
+		util.InitUI(false, true, "")
+	}
+
+	gateClient, err := createClient(config)
 	if err != nil {
 		return nil, err
 	}
 
-	gateClient, err := createClient(flags)
-	if err != nil {
-		return nil, err
-	}
-
-	err = userConfig(flags, gateClient)
-	if err != nil {
-		return nil, err
-	}
+	gateClient.determineAuthMethod()
 
 	// Api client initialization.
 	httpClient, err := gateClient.initializeClient()
@@ -139,13 +156,8 @@ func NewGateClient(flags *pflag.FlagSet) (*GatewayClient, error) {
 
 	m := make(map[string]string)
 
-	defaultHeaders, err := flags.GetString("default-headers")
-	if err != nil {
-		return nil, err
-	}
-
-	if defaultHeaders != "" {
-		headers := strings.Split(defaultHeaders, ",")
+	if config.Gate.DefaultHeaders != "" {
+		headers := strings.Split(config.Gate.DefaultHeaders, ",")
 		for _, element := range headers {
 			header := strings.Split(element, "=")
 			m[strings.TrimSpace(header[0])] = strings.TrimSpace(header[1])
@@ -170,78 +182,27 @@ func NewGateClient(flags *pflag.FlagSet) (*GatewayClient, error) {
 	return gateClient, nil
 }
 
-func userConfig(flags *pflag.FlagSet, gateClient *GatewayClient) error {
-	configLocationFlag, err := flags.GetString("config")
+// NewGateClient - Create new spinnaker gateway client get config from viper
+func NewGateClient() (*GatewayClient, error) {
+	config, err := config.Parse()
 	if err != nil {
-		return err
-	}
-	if configLocationFlag != "" {
-		gateClient.configLocation = configLocationFlag
-	} else {
-		userHome := ""
-		usr, err := user.Current()
-		if err != nil {
-			// Fallback by trying to read $HOME
-			userHome = os.Getenv("HOME")
-			if userHome != "" {
-				err = nil
-			} else {
-				util.UI.Error("Could not read current user from environment, failing.")
-				return err
-			}
-		} else {
-			userHome = usr.HomeDir
-		}
-		gateClient.configLocation = filepath.Join(userHome, ".spin", "config")
+		return nil, err
 	}
 
-	yamlFile, err := ioutil.ReadFile(gateClient.configLocation)
-	if yamlFile != nil {
-		err = yaml.UnmarshalStrict([]byte(os.ExpandEnv(string(yamlFile))), &gateClient.Config)
-		if err != nil {
-			util.UI.Error(fmt.Sprintf("Could not deserialize config file with contents: %s, failing.", yamlFile))
-			return err
-		}
-	} else {
-		gateClient.Config = config.Config{}
-	}
-	return nil
+	return NewGateClientWithConfig(config)
 }
 
-func createClient(flags *pflag.FlagSet) (*GatewayClient, error) {
-	gateEndpoint, err := flags.GetString("gate-endpoint")
-	if err != nil {
-		return nil, err
-	}
-	ignoreCertErrors, err := flags.GetBool("insecure")
-	if err != nil {
-		return nil, err
-	}
+func createClient(config config.Config) (*GatewayClient, error) {
 	return &GatewayClient{
-		gateEndpoint:     gateEndpoint,
-		ignoreCertErrors: ignoreCertErrors,
+		Config:           config,
+		gateEndpoint:     config.Gate.Endpoint,
+		ignoreCertErrors: config.Gate.Insecure,
+		configLocation:   config.Location,
 	}, nil
 }
 
-func configureOutput(flags *pflag.FlagSet) error {
-	quiet, err := flags.GetBool("quiet")
-	if err != nil {
-		return err
-	}
-	nocolor, err := flags.GetBool("no-color")
-	if err != nil {
-		return err
-	}
-	outputFormat, err := flags.GetString("output")
-	if err != nil {
-		return err
-	}
-	util.InitUI(quiet, nocolor, outputFormat)
-	return nil
-}
-
 func (m *GatewayClient) initializeClient() (*http.Client, error) {
-	auth := m.Config.Auth
+	authConfig := m.Config.Auth
 	cookieJar, _ := cookiejar.New(nil)
 	client := http.Client{
 		Jar: cookieJar,
@@ -251,8 +212,8 @@ func (m *GatewayClient) initializeClient() (*http.Client, error) {
 		http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	}
 
-	if auth != nil && auth.Enabled && auth.X509 != nil {
-		X509 := auth.X509
+	if authConfig != nil && authConfig.Enabled && authConfig.X509 != nil && authConfig.Method == auth.X509 {
+		X509 := authConfig.X509
 		client.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{},
 		}
@@ -283,7 +244,7 @@ func (m *GatewayClient) initializeClient() (*http.Client, error) {
 			}
 
 			return m.initializeX509Config(client, clientCA, cert), nil
-		} else if X509.Cert != "" && X509.Key != "" {
+		} else if X509.Cert != "" && X509.Key != "" && authConfig.Method == auth.X509 {
 			certBytes := []byte(X509.Cert)
 			keyBytes := []byte(X509.Key)
 			cert, err := tls.X509KeyPair(certBytes, keyBytes)
@@ -296,17 +257,17 @@ func (m *GatewayClient) initializeClient() (*http.Client, error) {
 			// Misconfigured.
 			return nil, errors.New("Incorrect x509 auth configuration.\nMust specify certPath/keyPath or cert/key pair.")
 		}
-	} else if auth != nil && auth.Enabled && auth.Iap != nil {
+	} else if authConfig != nil && authConfig.Enabled && authConfig.Iap != nil && authConfig.Method == auth.Iap {
 		accessToken, err := m.authenticateIAP()
 		m.Context = context.WithValue(context.Background(), gate.ContextAccessToken, accessToken)
 		return &client, err
-	} else if auth != nil && auth.Enabled && auth.Basic != nil {
-		if !auth.Basic.IsValid() {
+	} else if authConfig != nil && authConfig.Enabled && authConfig.Basic != nil && authConfig.Method == auth.Basic {
+		if !authConfig.Basic.IsValid() {
 			return nil, errors.New("Incorrect Basic auth configuration. Must include username and password.")
 		}
 		m.Context = context.WithValue(context.Background(), gate.ContextBasicAuth, gate.BasicAuth{
-			UserName: auth.Basic.Username,
-			Password: auth.Basic.Password,
+			UserName: authConfig.Basic.Username,
+			Password: authConfig.Basic.Password,
 		})
 		return &client, nil
 	} else {
@@ -328,9 +289,9 @@ func (m *GatewayClient) initializeX509Config(client http.Client, clientCA []byte
 }
 
 func (m *GatewayClient) authenticateOAuth2() error {
-	auth := m.Config.Auth
-	if auth != nil && auth.Enabled && auth.OAuth2 != nil {
-		OAuth2 := auth.OAuth2
+	authConfig := m.Config.Auth
+	if authConfig != nil && authConfig.Enabled && authConfig.OAuth2 != nil && authConfig.Method == auth.OAuth2 {
+		OAuth2 := authConfig.OAuth2
 		if !OAuth2.IsValid() {
 			// TODO(jacobkiefer): Improve this error message.
 			return errors.New("incorrect OAuth2 auth configuration")
@@ -349,9 +310,9 @@ func (m *GatewayClient) authenticateOAuth2() error {
 		var newToken *oauth2.Token
 		var err error
 
-		if auth.OAuth2.CachedToken != nil {
+		if authConfig.OAuth2.CachedToken != nil {
 			// Look up cached credentials to save oauth2 roundtrip.
-			token := auth.OAuth2.CachedToken
+			token := authConfig.OAuth2.CachedToken
 			tokenSource := config.TokenSource(context.Background(), token)
 			newToken, err = tokenSource.Token()
 			if err != nil {
@@ -397,19 +358,19 @@ func (m *GatewayClient) authenticateOAuth2() error {
 }
 
 func (m *GatewayClient) authenticateIAP() (string, error) {
-	auth := m.Config.Auth
-	iapConfig := auth.Iap
+	authConfig := m.Config.Auth
+	iapConfig := authConfig.Iap
 	token, err := iap.GetIapToken(*iapConfig)
 	return token, err
 }
 
 func (m *GatewayClient) authenticateGoogleServiceAccount() (err error) {
-	auth := m.Config.Auth
-	if auth == nil {
+	authConfig := m.Config.Auth
+	if authConfig == nil || authConfig.Method != auth.Google {
 		return nil
 	}
 
-	gsa := auth.GoogleServiceAccount
+	gsa := authConfig.GoogleServiceAccount
 	if !gsa.IsEnabled() {
 		return nil
 	}
@@ -463,15 +424,15 @@ func (m *GatewayClient) login(accessToken string) error {
 }
 
 func (m *GatewayClient) authenticateLdap() error {
-	auth := m.Config.Auth
-	if auth != nil && auth.Enabled && auth.Ldap != nil {
-		if !auth.Ldap.IsValid() {
+	authConfig := m.Config.Auth
+	if authConfig != nil && authConfig.Enabled && authConfig.Ldap != nil && authConfig.Method == auth.Ldap {
+		if !authConfig.Ldap.IsValid() {
 			return errors.New("Incorrect LDAP auth configuration. Must include username and password.")
 		}
 
 		form := url.Values{}
-		form.Add("username", auth.Ldap.Username)
-		form.Add("password", auth.Ldap.Password)
+		form.Add("username", authConfig.Ldap.Username)
+		form.Add("password", authConfig.Ldap.Password)
 
 		loginReq, err := http.NewRequest("POST", m.GateEndpoint()+"/login", strings.NewReader(form.Encode()))
 		loginReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")

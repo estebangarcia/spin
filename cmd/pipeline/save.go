@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 
 	"github.com/spinnaker/spin/util"
 )
@@ -55,7 +55,7 @@ func NewSaveCmd(pipelineOptions pipelineOptions) *cobra.Command {
 }
 
 func savePipeline(cmd *cobra.Command, options SaveOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func savePipeline(cmd *cobra.Command, options SaveOptions) error {
 			util.UI.Error("Required pipeline key 'schema' missing for templated pipeline...\n")
 			valid = false
 		}
-	    pipelineJson["type"] = "templatedPipeline"
+		pipelineJson["type"] = "templatedPipeline"
 	}
 
 	if !valid {

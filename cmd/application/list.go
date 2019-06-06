@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -46,7 +46,8 @@ func NewListCmd(appOptions applicationOptions) *cobra.Command {
 }
 
 func listApplication(cmd *cobra.Command, args []string) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

@@ -27,7 +27,7 @@ func TestPipelineList_basic(t *testing.T) {
 	ts := testGatePipelineListSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "list", "--application", "app", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "list", "--application", "app", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -46,7 +46,7 @@ func TestPipelineList_flags(t *testing.T) {
 	ts := testGatePipelineListSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "list", "--gate-endpoint", ts.URL} // Missing application.
+	args := []string{"pipeline", "list", "--gate.endpoint", ts.URL} // Missing application.
 	currentCmd := NewListCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -64,7 +64,7 @@ func TestPipelineList_malformed(t *testing.T) {
 	ts := testGatePipelineListMalformed()
 	defer ts.Close()
 
-	args := []string{"pipeline", "list", "--application", "app", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "list", "--application", "app", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -82,7 +82,7 @@ func TestPipelineList_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"pipeline", "list", "--application", "app", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "list", "--application", "app", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -99,16 +99,26 @@ func TestPipelineList_fail(t *testing.T) {
 // testGatePipelineListSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed pipeline list.
 func testGatePipelineListSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(pipelineListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 // testGatePipelineListMalformed returns a malformed list of pipeline configs.
 func testGatePipelineListMalformed() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(malformedPipelineListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 const malformedPipelineListJson = `

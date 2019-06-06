@@ -25,7 +25,7 @@ func TestPipelineDelete_basic(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "delete", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "delete", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -43,7 +43,7 @@ func TestPipelineDelete_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"pipeline", "delete", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "delete", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -61,7 +61,7 @@ func TestPipelineDelete_flags(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "delete", "--gate-endpoint", ts.URL} // Missing pipeline app and name.
+	args := []string{"pipeline", "delete", "--gate.endpoint", ts.URL} // Missing pipeline app and name.
 	currentCmd := NewDeleteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -79,7 +79,7 @@ func TestPipelineDelete_missingname(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "delete", "--application", "app", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "delete", "--application", "app", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -97,7 +97,7 @@ func TestPipelineDelete_missingapp(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "delete", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "delete", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)

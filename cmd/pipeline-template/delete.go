@@ -16,10 +16,11 @@ package pipeline_template
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
-	"github.com/spinnaker/spin/util"
 	"net/http"
+
+	"github.com/spf13/cobra"
+	"github.com/spinnaker/spin/gateclient"
+	"github.com/spinnaker/spin/util"
 )
 
 type DeleteOptions struct {
@@ -28,8 +29,8 @@ type DeleteOptions struct {
 }
 
 var (
-	deletePipelineTemplateShort   = "Delete the provided pipeline template"
-	deletePipelineTemplateLong    = "Delete the provided pipeline template"
+	deletePipelineTemplateShort = "Delete the provided pipeline template"
+	deletePipelineTemplateLong  = "Delete the provided pipeline template"
 )
 
 func NewDeleteCmd(pipelineTemplateOptions pipelineTemplateOptions) *cobra.Command {
@@ -54,7 +55,7 @@ func NewDeleteCmd(pipelineTemplateOptions pipelineTemplateOptions) *cobra.Comman
 }
 
 func deletePipelineTemplate(cmd *cobra.Command, options DeleteOptions, args []string) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

@@ -24,9 +24,15 @@ type X509Config struct {
 }
 
 func (x *X509Config) IsValid() bool {
+
+	if x.CertPath == "" && x.Cert == "" && x.KeyPath == "" && x.Key == "" {
+		return false
+	}
+
 	// Only one pair of configs properties should be set.
 	pathPropertySet := x.CertPath != "" || x.KeyPath != ""
 	pemPropertySet := x.Cert != "" || x.Key != ""
+
 	if pathPropertySet && pemPropertySet {
 		return false
 	}
