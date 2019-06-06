@@ -19,7 +19,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -54,7 +54,7 @@ func NewListCmd(pipelineTemplateOptions pipelineTemplateOptions) *cobra.Command 
 }
 
 func listPipelineTemplate(cmd *cobra.Command, options ListOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

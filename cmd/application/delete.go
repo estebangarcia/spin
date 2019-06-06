@@ -16,11 +16,12 @@ package application
 
 import (
 	"fmt"
-	"github.com/spinnaker/spin/cmd/orca-tasks"
 	"net/http"
 
+	orca_tasks "github.com/spinnaker/spin/cmd/orca-tasks"
+
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -47,7 +48,7 @@ func NewDeleteCmd(appOptions applicationOptions) *cobra.Command {
 }
 
 func deleteApplication(cmd *cobra.Command, args []string) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

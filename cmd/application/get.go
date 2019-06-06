@@ -16,11 +16,12 @@ package application
 
 import (
 	"fmt"
-	"github.com/spinnaker/spin/util"
 	"net/http"
 
+	"github.com/spinnaker/spin/util"
+
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 )
 
 type GetOptions struct {
@@ -37,7 +38,7 @@ var (
 func NewGetCmd(appOptions applicationOptions) *cobra.Command {
 	options := GetOptions{
 		applicationOptions: &appOptions,
-		expand: false,
+		expand:             false,
 	}
 
 	cmd := &cobra.Command{
@@ -46,7 +47,7 @@ func NewGetCmd(appOptions applicationOptions) *cobra.Command {
 		Short:   getApplicationShort,
 		Long:    getApplicationLong,
 		Example: getApplicationExample,
-		RunE:    func(cmd *cobra.Command, args []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			return getApplication(cmd, options, args)
 		},
 	}
@@ -58,7 +59,7 @@ func NewGetCmd(appOptions applicationOptions) *cobra.Command {
 }
 
 func getApplication(cmd *cobra.Command, options GetOptions, args []string) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

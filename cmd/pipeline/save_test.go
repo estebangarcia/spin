@@ -32,7 +32,7 @@ func TestPipelineSave_basic(t *testing.T) {
 		t.Fatal("Could not create temp pipeline file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
@@ -63,7 +63,7 @@ func TestPipelineSave_stdin(t *testing.T) {
 	defer func() { os.Stdin = oldStdin }()
 	os.Stdin = tempFile
 
-	args := []string{"pipeline", "save", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -87,7 +87,7 @@ func TestPipelineSave_fail(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -105,7 +105,7 @@ func TestPipelineSave_flags(t *testing.T) {
 	ts := GateServerSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "save", "--gate-endpoint", ts.URL} // Missing pipeline spec file.
+	args := []string{"pipeline", "save", "--gate.endpoint", ts.URL} // Missing pipeline spec file.
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -129,7 +129,7 @@ func TestPipelineSave_missingname(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -153,7 +153,7 @@ func TestPipelineSave_missingid(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -177,7 +177,7 @@ func TestPipelineSave_missingapp(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -204,9 +204,14 @@ func tempPipelineFile(pipelineContent string) *os.File {
 // GateServerSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 OK.
 func GateServerSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "") // Just write an empty 200 success on save.
 	}))
+	return httptest.NewServer(mux)
 }
 
 // GateServerFail spins up a local http server that we will configure the GateClient

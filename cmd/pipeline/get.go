@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -32,8 +32,8 @@ type GetOptions struct {
 }
 
 var (
-	getPipelineShort   = "Get the pipeline with the provided name from the provided application"
-	getPipelineLong    = "Get the specified pipeline"
+	getPipelineShort = "Get the pipeline with the provided name from the provided application"
+	getPipelineLong  = "Get the specified pipeline"
 )
 
 func NewGetCmd(pipelineOptions pipelineOptions) *cobra.Command {
@@ -41,9 +41,9 @@ func NewGetCmd(pipelineOptions pipelineOptions) *cobra.Command {
 		pipelineOptions: &pipelineOptions,
 	}
 	cmd := &cobra.Command{
-		Use:     "get",
-		Short:   getPipelineShort,
-		Long:    getPipelineLong,
+		Use:   "get",
+		Short: getPipelineShort,
+		Long:  getPipelineLong,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return getPipeline(cmd, options)
 		},
@@ -56,7 +56,7 @@ func NewGetCmd(pipelineOptions pipelineOptions) *cobra.Command {
 }
 
 func getPipeline(cmd *cobra.Command, options GetOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

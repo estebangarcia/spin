@@ -23,18 +23,21 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/spinnaker/spin/config"
 	"github.com/spinnaker/spin/util"
 )
 
 func getRootCmdForTest() *cobra.Command {
 	rootCmd := &cobra.Command{}
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.spin/config)")
-	rootCmd.PersistentFlags().String("gate-endpoint", "", "Gate (API server) endpoint. Default http://localhost:8084")
-	rootCmd.PersistentFlags().Bool("insecure", false, "Ignore Certificate Errors")
 	rootCmd.PersistentFlags().Bool("quiet", false, "Squelch non-essential output")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color")
 	rootCmd.PersistentFlags().String("output", "", "Configure output formatting")
-	rootCmd.PersistentFlags().String("default-headers", "", "Configure addtional headers for gate client requests")
+
+	flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
+	rootCmd.PersistentFlags().AddFlagSet(flagSet)
+	viper.BindPFlags(rootCmd.PersistentFlags())
 	util.InitUI(false, false, "")
 	return rootCmd
 }
@@ -48,7 +51,7 @@ func TestPipelineGet_basic(t *testing.T) {
 	pipelineCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineCmd)
 
-	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -60,7 +63,7 @@ func TestPipelineGet_flags(t *testing.T) {
 	ts := testGatePipelineGetSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline", "get", "--gate-endpoint", ts.URL} // Missing application and name.
+	args := []string{"pipeline", "get", "--gate.endpoint", ts.URL} // Missing application and name.
 	currentCmd := NewGetCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -79,7 +82,7 @@ func TestPipelineGet_malformed(t *testing.T) {
 	ts := testGatePipelineGetMalformed()
 	defer ts.Close()
 
-	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewGetCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -98,7 +101,7 @@ func TestPipelineGet_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "get", "--application", "app", "--name", "one", "--gate.endpoint", ts.URL}
 	currentCmd := NewGetCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)
@@ -116,7 +119,7 @@ func TestPipelineGet_notfound(t *testing.T) {
 	ts := testGatePipelineGetMissing()
 	defer ts.Close()
 
-	args := []string{"pipeline", "get", "--application", "app", "--name", "two", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline", "get", "--application", "app", "--name", "two", "--gate.endpoint", ts.URL}
 	currentCmd := NewGetCmd(pipelineOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineCmd := NewPipelineCmd(os.Stdout)

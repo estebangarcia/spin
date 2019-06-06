@@ -17,11 +17,12 @@ package execution
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
-	"github.com/spinnaker/spin/util"
 	"net/http"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spinnaker/spin/gateclient"
+	"github.com/spinnaker/spin/util"
 )
 
 type ListOptions struct {
@@ -65,7 +66,7 @@ func NewListCmd(executionOptions executionOptions) *cobra.Command {
 }
 
 func listExecution(cmd *cobra.Command, options ListOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

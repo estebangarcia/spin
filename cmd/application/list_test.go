@@ -33,7 +33,7 @@ func TestApplicationList_basic(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "list", "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "list", "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -51,7 +51,7 @@ func TestApplicationList_malformed(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "list", "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "list", "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil {
@@ -69,7 +69,7 @@ func TestApplicationList_fail(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "list", "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "list", "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil {
@@ -80,16 +80,26 @@ func TestApplicationList_fail(t *testing.T) {
 // testGateApplicationListSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed application list.
 func testGateApplicationListSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/applications", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(applicationListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 // testGateApplicationListMalformed returns a malformed list of application configs.
 func testGateApplicationListMalformed() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/applications", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(malformedApplicationListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 const malformedApplicationListJson = `

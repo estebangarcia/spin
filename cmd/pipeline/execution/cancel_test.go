@@ -34,7 +34,7 @@ func TestExecutionCancel_basic(t *testing.T) {
 	rootCmd.AddCommand(executionCmd)
 
 	// Exclude 'pipeline' since we are testing only the 'execution' subcommand.
-	args := []string{"ex", "cancel", "someId", "--gate-endpoint", ts.URL}
+	args := []string{"ex", "cancel", "someId", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -54,7 +54,7 @@ func TestExecutionCancel_noinput(t *testing.T) {
 	rootCmd.AddCommand(executionCmd)
 
 	// Exclude 'pipeline' since we are testing only the 'execution' subcommand.
-	args := []string{"ex", "cancel", "--gate-endpoint", ts.URL}
+	args := []string{"ex", "cancel", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil {
@@ -74,7 +74,7 @@ func TestExecutionCancel_failure(t *testing.T) {
 	rootCmd.AddCommand(executionCmd)
 
 	// Exclude 'pipeline' since we are testing only the 'execution' subcommand.
-	args := []string{"ex", "cancel", "someId", "--gate-endpoint", ts.URL}
+	args := []string{"ex", "cancel", "someId", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil {
@@ -85,7 +85,12 @@ func TestExecutionCancel_failure(t *testing.T) {
 // testGateExecutionCancelSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed pipeline get response.
 func testGateExecutionCancelSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/pipelines/someId/cancel", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "")
 	}))
+	return httptest.NewServer(mux)
 }

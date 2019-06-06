@@ -27,7 +27,7 @@ func TestExecutionList_basic(t *testing.T) {
 	ts := testGateExecutionListSuccess()
 	defer ts.Close()
 
-	args := []string{"execution", "list", "--pipeline-id", "myid", "--gate-endpoint", ts.URL}
+	args := []string{"execution", "list", "--pipeline-id", "myid", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(executionOptions{})
 	rootCmd := getRootCmdForTest()
 	executionCmd := NewExecutionCmd(os.Stdout)
@@ -46,7 +46,7 @@ func TestExecutionList_flags(t *testing.T) {
 	ts := testGateExecutionListSuccess()
 	defer ts.Close()
 
-	args := []string{"execution", "list", "--gate-endpoint", ts.URL} // Missing pipeline id.
+	args := []string{"execution", "list", "--gate.endpoint", ts.URL} // Missing pipeline id.
 	currentCmd := NewListCmd(executionOptions{})
 	rootCmd := getRootCmdForTest()
 	executionCmd := NewExecutionCmd(os.Stdout)
@@ -64,7 +64,7 @@ func TestExecutionList_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"execution", "list", "--pipeline-id", "myid", "--gate-endpoint", ts.URL}
+	args := []string{"execution", "list", "--pipeline-id", "myid", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(executionOptions{})
 	rootCmd := getRootCmdForTest()
 	executionCmd := NewExecutionCmd(os.Stdout)
@@ -81,9 +81,14 @@ func TestExecutionList_fail(t *testing.T) {
 // testGateExecutionListSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed execution list.
 func testGateExecutionListSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/executions", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(executionListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 const executionListJson = `

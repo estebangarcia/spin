@@ -23,9 +23,21 @@ import (
 	"github.com/spinnaker/spin/config/auth/x509"
 )
 
+type AuthMethod string
+
+const (
+	X509   AuthMethod = "x509"
+	OAuth2 AuthMethod = "oauth2"
+	Basic  AuthMethod = "basic"
+	Iap    AuthMethod = "iap"
+	Ldap   AuthMethod = "ldap"
+	Google AuthMethod = "google"
+)
+
 // AuthConfig is the CLI's authentication configuration.
 type AuthConfig struct {
 	Enabled bool                 `yaml:"enabled"`
+	Method  AuthMethod           `yaml:"method"`
 	X509    *x509.X509Config     `yaml:"x509,omitempty"`
 	OAuth2  *oauth2.OAuth2Config `yaml:"oauth2,omitempty"`
 	Basic   *basic.BasicConfig   `yaml:"basic,omitempty"`

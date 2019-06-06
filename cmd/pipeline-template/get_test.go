@@ -14,26 +14,29 @@
 package pipeline_template
 
 import (
-"fmt"
-"net/http"
-"net/http/httptest"
-"os"
-"strings"
-"testing"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"strings"
+	"testing"
 
-"github.com/spf13/cobra"
-"github.com/spinnaker/spin/util"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/spinnaker/spin/config"
+	"github.com/spinnaker/spin/util"
 )
 
 func getRootCmdForTest() *cobra.Command {
 	rootCmd := &cobra.Command{}
 	rootCmd.PersistentFlags().String("config", "", "config file (default is $HOME/.spin/config)")
-	rootCmd.PersistentFlags().String("gate-endpoint", "", "Gate (API server) endpoint. Default http://localhost:8084")
-	rootCmd.PersistentFlags().Bool("insecure", false, "Ignore Certificate Errors")
 	rootCmd.PersistentFlags().Bool("quiet", false, "Squelch non-essential output")
 	rootCmd.PersistentFlags().Bool("no-color", false, "Disable color")
 	rootCmd.PersistentFlags().String("output", "", "Configure output formatting")
-	rootCmd.PersistentFlags().String("default-headers", "", "Configure addtional headers for gate client requests")
+
+	flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
+	rootCmd.PersistentFlags().AddFlagSet(flagSet)
+	viper.BindPFlags(rootCmd.PersistentFlags())
 	util.InitUI(false, false, "")
 	return rootCmd
 }
@@ -47,7 +50,7 @@ func TestPipelineGet_basic(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -65,7 +68,7 @@ func TestPipelineGet_args(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "newSpelTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "newSpelTemplate", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -83,7 +86,7 @@ func TestPipelineGet_tag(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "newSpelTemplate", "--tag", "stable", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "newSpelTemplate", "--tag", "stable", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -102,7 +105,7 @@ func TestPipelineGet_flags(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "--gate-endpoint", ts.URL} // missing id flag and no args
+	args := []string{"pipeline-template", "get", "--gate.endpoint", ts.URL} // missing id flag and no args
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -121,7 +124,7 @@ func TestPipelineGet_malformed(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -140,7 +143,7 @@ func TestPipelineGet_fail(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "--id", "newSpelTemplate", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -159,7 +162,7 @@ func TestPipelineGet_notfound(t *testing.T) {
 	pipelineTemplateCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(pipelineTemplateCmd)
 
-	args := []string{"pipeline-template", "get", "--application", "app", "--name", "two", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "get", "--application", "app", "--name", "two", "--gate.endpoint", ts.URL}
 	rootCmd.SetArgs(args)
 
 	err := rootCmd.Execute()
@@ -185,9 +188,14 @@ func testGatePipelineTemplateGetMalformed() *httptest.Server {
 
 // testGatePipelineGetMissing returns a 404 Not Found for an errant pipeline name|application pair.
 func testGatePipelineTemplateGetMissing() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}))
+	return httptest.NewServer(mux)
 }
 
 // GateServerFail spins up a local http server that we will configure the GateClient
