@@ -17,7 +17,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -67,9 +67,9 @@ func Parse() (Config, error) {
 }
 
 func ParseFromFile(file string) (Config, error) {
-	fmt.Printf("allkeys %v", viper.AllKeys())
+	log.Printf("allkeys %v", viper.AllKeys())
 	if len(viper.AllKeys()) == 0 {
-		fmt.Printf("allkeys if")
+		log.Printf("allkeys if")
 		flagSet := GeneratePFlagsFromStruct(&config.Config{}, "")
 		viper.BindPFlags(flagSet)
 	}
