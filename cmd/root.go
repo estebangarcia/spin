@@ -3,8 +3,6 @@ package cmd
 import (
 	"io"
 
-	"github.com/estebangarcia/spin/config"
-
 	"github.com/estebangarcia/spin/cmd/application"
 	"github.com/estebangarcia/spin/cmd/pipeline"
 	pipeline_template "github.com/estebangarcia/spin/cmd/pipeline-template"
@@ -33,9 +31,9 @@ func NewCmdRoot(out io.Writer) *cobra.Command {
 	cmd.PersistentFlags().Bool("no-color", true, "disable color")
 	cmd.PersistentFlags().String("output", "", "configure output formatting")
 
-	flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
-	cmd.PersistentFlags().AddFlagSet(flagSet)
-	viper.BindPFlags(flagSet)
+	//flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
+	//cmd.PersistentFlags().AddFlagSet(flagSet)
+	//viper.BindPFlags(flagSet)
 
 	// create subcommands
 	cmd.AddCommand(application.NewApplicationCmd(out))
