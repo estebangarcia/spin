@@ -21,7 +21,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
+	"github.com/spinnaker/spin/gateclient"
 	"github.com/spinnaker/spin/util"
 )
 
@@ -62,7 +62,7 @@ func NewExecuteCmd(pipelineOptions pipelineOptions) *cobra.Command {
 }
 
 func executePipeline(cmd *cobra.Command, options ExecuteOptions) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

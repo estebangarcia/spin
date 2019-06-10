@@ -40,7 +40,7 @@ func TestApplicationSave_basic(t *testing.T) {
 
 	args := []string{
 		"application", "save",
-		"--gate-endpoint=" + ts.URL,
+		"--gate.endpoint=" + ts.URL,
 		"--application-name", NAME,
 		"--owner-email", EMAIL,
 		"--cloud-providers", "gce,kubernetes",
@@ -60,7 +60,7 @@ func TestApplicationSave_fail(t *testing.T) {
 		"--application-name", NAME,
 		"--owner-email", EMAIL,
 		"--cloud-providers", "gce,kubernetes",
-		"--gate-endpoint=" + ts.URL,
+		"--gate.endpoint=" + ts.URL,
 	}
 	currentCmd := NewSaveCmd(applicationOptions{})
 	rootCmd := getRootCmdForTest()
@@ -81,7 +81,7 @@ func TestApplicationSave_flags(t *testing.T) {
 
 	args := []string{
 		"application", "save",
-		"--gate-endpoint=" + ts.URL,
+		"--gate.endpoint=" + ts.URL,
 	}
 	currentCmd := NewSaveCmd(applicationOptions{})
 	rootCmd := getRootCmdForTest()
@@ -104,7 +104,7 @@ func TestApplicationSave_missingname(t *testing.T) {
 		"application", "save",
 		"--owner-email", EMAIL,
 		"--cloud-providers", "gce,kubernetes",
-		"--gate-endpoint=" + ts.URL,
+		"--gate.endpoint=" + ts.URL,
 	}
 	currentCmd := NewSaveCmd(applicationOptions{})
 	rootCmd := getRootCmdForTest()
@@ -127,7 +127,7 @@ func TestApplicationSave_missingemail(t *testing.T) {
 		"application", "save",
 		"--application-name", NAME,
 		"--cloud-providers", "gce,kubernetes",
-		"--gate-endpoint", ts.URL,
+		"--gate.endpoint", ts.URL,
 	}
 	currentCmd := NewSaveCmd(applicationOptions{})
 	rootCmd := getRootCmdForTest()
@@ -150,7 +150,7 @@ func TestApplicationSave_missingproviders(t *testing.T) {
 		"application", "save",
 		"--application-name", NAME,
 		"--owner-email", EMAIL,
-		"--gate-endpoint", ts.URL,
+		"--gate.endpoint", ts.URL,
 	}
 	currentCmd := NewSaveCmd(applicationOptions{})
 	rootCmd := getRootCmdForTest()
@@ -178,7 +178,7 @@ func TestApplicationSave_filebasic(t *testing.T) {
 	args := []string{
 		"application", "save",
 		"--file", tempFile.Name(),
-		"--gate-endpoint", ts.URL,
+		"--gate.endpoint", ts.URL,
 	}
 
 	currentCmd := NewSaveCmd(applicationOptions{})
@@ -212,7 +212,7 @@ func TestApplicationSave_stdinbasic(t *testing.T) {
 
 	args := []string{
 		"application", "save",
-		"--gate-endpoint", ts.URL,
+		"--gate.endpoint", ts.URL,
 	}
 
 	currentCmd := NewSaveCmd(applicationOptions{})
@@ -241,6 +241,9 @@ func GateServerFail() *httptest.Server {
 // to direct requests to. Responds with successful responses to pipeline execute API calls.
 func testGateApplicationSaveSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
 	mux.Handle("/tasks", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		payload := map[string]string{
 			"ref": "/tasks/id",

@@ -22,3 +22,7 @@ type IapConfig struct {
 	IapIdToken            string `yaml:"iapIdToken"`
 	ServiceAccountKeyPath string `yaml:"serviceAccountKeyPath"`
 }
+
+func (i *IapConfig) IsValid() bool {
+	return i.IapIdToken != "" || (i.IapClientId != "" && (i.ServiceAccountKeyPath != "" || (i.OAuthClientId != "" && i.OAuthClientSecret != "")))
+}

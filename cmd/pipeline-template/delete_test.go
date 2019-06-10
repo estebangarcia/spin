@@ -29,7 +29,7 @@ func TestPipelineTemplateDelete_basic(t *testing.T) {
 	ts := gateServerDeleteSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "delete", "myTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "delete", "myTemplate", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -47,7 +47,7 @@ func TestPipelineTemplateDelete_tag(t *testing.T) {
 	ts := gateServerDeleteSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "delete", "myTemplate", "--tag", "stable", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "delete", "myTemplate", "--tag", "stable", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -65,7 +65,7 @@ func TestPipelineTemplateDelete_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "delete", "myTemplate", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "delete", "myTemplate", "--gate.endpoint", ts.URL}
 	currentCmd := NewDeleteCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -83,7 +83,7 @@ func TestPipelineTemplateDelete_flags(t *testing.T) {
 	ts := gateServerDeleteSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "delete", "--id", "myTemplate", "--gate-endpoint", ts.URL} // Extra --id flag.
+	args := []string{"pipeline-template", "delete", "--id", "myTemplate", "--gate.endpoint", ts.URL} // Extra --id flag.
 	currentCmd := NewDeleteCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -101,7 +101,7 @@ func TestPipelineTemplateDelete_missingid(t *testing.T) {
 	ts := gateServerDeleteSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "delete", "--gate-endpoint", ts.URL} // Missing pipeline id.
+	args := []string{"pipeline-template", "delete", "--gate.endpoint", ts.URL} // Missing pipeline id.
 	currentCmd := NewDeleteCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -120,6 +120,9 @@ func TestPipelineTemplateDelete_missingid(t *testing.T) {
 // and Accepts POST calls.
 func gateServerDeleteSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
 	mux.Handle("/v2/pipelineTemplates/myTemplate", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodDelete {
 			resp := gate.ResponseEntity{StatusCode: "201 Accepted", StatusCodeValue: 201}

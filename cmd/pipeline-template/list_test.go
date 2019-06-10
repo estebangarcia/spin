@@ -27,7 +27,7 @@ func TestPipelineTemplateList_basic(t *testing.T) {
 	ts := testGatePipelineTemplateListSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "list", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "list", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -45,7 +45,7 @@ func TestPipelineTemplateList_scope(t *testing.T) {
 	ts := testGateScopedPipelineTemplateListSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "list", "--scopes", "specific", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "list", "--scopes", "specific", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -63,7 +63,7 @@ func TestPipelineTemplateList_malformed(t *testing.T) {
 	ts := testGatePipelineTemplateListMalformed()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "list", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "list", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -81,7 +81,7 @@ func TestPipelineTemplateList_fail(t *testing.T) {
 	ts := GateServerFail()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "list", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "list", "--gate.endpoint", ts.URL}
 	currentCmd := NewListCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -98,24 +98,39 @@ func TestPipelineTemplateList_fail(t *testing.T) {
 // testGatePipelineTemplateListSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed pipelineTemplate list.
 func testGatePipelineTemplateListSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(pipelineTemplateListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 // testGateScopedPipelineTemplateListSuccess spins up a local http server that we will configure the GateClient
 // to direct requests to. Responds with a 200 and a well-formed pipelineTemplate list.
 func testGateScopedPipelineTemplateListSuccess() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(scopedPipelineTemplateListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 // testGatePipelineTemplateListMalformed returns a malformed list of pipelineTemplate configs.
 func testGatePipelineTemplateListMalformed() *httptest.Server {
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, strings.TrimSpace(malformedPipelineTemplateListJson))
 	}))
+	return httptest.NewServer(mux)
 }
 
 const malformedPipelineTemplateListJson = `

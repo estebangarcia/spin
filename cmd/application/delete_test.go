@@ -33,7 +33,7 @@ func TestApplicationDelete_basic(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "delete", NAME, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "delete", NAME, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -51,7 +51,7 @@ func TestApplicationDelete_fail(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "delete", NAME, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "delete", NAME, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err == nil {
@@ -69,7 +69,7 @@ func TestApplicationDelete_flags(t *testing.T) {
 	appCmd.AddCommand(currentCmd)
 	rootCmd.AddCommand(appCmd)
 
-	args := []string{"application", "delete", NAME, "--gate-endpoint=" + ts.URL}
+	args := []string{"application", "delete", NAME, "--gate.endpoint=" + ts.URL}
 	rootCmd.SetArgs(args)
 	err := rootCmd.Execute()
 	if err != nil {
@@ -81,7 +81,10 @@ func TestApplicationDelete_flags(t *testing.T) {
 // to direct requests to. Responds with successful responses to pipeline execute API calls.
 func testGateApplicationDeleteSuccess() *httptest.Server {
 	mux := http.NewServeMux()
-	mux.Handle("/applications/" + APP, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintln(w, "{}")
+	}))
+	mux.Handle("/applications/"+APP, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		payload := map[string]string{} // We don't use the payload, we are just checking if the target app exists.
 		b, _ := json.Marshal(&payload)
 		fmt.Fprintln(w, string(b))

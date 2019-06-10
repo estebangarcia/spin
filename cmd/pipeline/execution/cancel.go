@@ -17,10 +17,11 @@ package execution
 import (
 	"errors"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/gateclient"
-	"github.com/spinnaker/spin/util"
 	"net/http"
+
+	"github.com/spf13/cobra"
+	"github.com/spinnaker/spin/gateclient"
+	"github.com/spinnaker/spin/util"
 )
 
 var (
@@ -40,7 +41,7 @@ func NewCancelCmd() *cobra.Command {
 }
 
 func cancelExecution(cmd *cobra.Command, args []string) error {
-	gateClient, err := gateclient.NewGateClient(cmd.InheritedFlags())
+	gateClient, err := gateclient.NewGateClient()
 	if err != nil {
 		return err
 	}

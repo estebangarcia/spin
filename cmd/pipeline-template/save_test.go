@@ -32,7 +32,7 @@ func TestPipelineTemplateSave_create(t *testing.T) {
 		t.Fatal("Could not create temp pipeline template file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
@@ -56,7 +56,7 @@ func TestPipelineTemplateSave_createtag(t *testing.T) {
 		t.Fatal("Could not create temp pipeline template file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--tag", "stable", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--tag", "stable", "--gate.endpoint", ts.URL}
 
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
@@ -80,7 +80,7 @@ func TestPipelineTemplateSave_update(t *testing.T) {
 		t.Fatal("Could not create temp pipeline template file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
@@ -104,7 +104,7 @@ func TestPipelineTemplateSave_updatetag(t *testing.T) {
 		t.Fatal("Could not create temp pipeline template file.")
 	}
 	defer os.Remove(tempFile.Name())
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--tag", "stable", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--tag", "stable", "--gate.endpoint", ts.URL}
 
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
@@ -135,7 +135,7 @@ func TestPipelineTemplateSave_stdin(t *testing.T) {
 	defer func() { os.Stdin = oldStdin }()
 	os.Stdin = tempFile
 
-	args := []string{"pipeline-template", "save", "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -159,7 +159,7 @@ func TestPipelineTemplateSave_fail(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -177,7 +177,7 @@ func TestPipelineTemplateSave_flags(t *testing.T) {
 	ts := gateServerUpdateSuccess()
 	defer ts.Close()
 
-	args := []string{"pipeline-template", "save", "--gate-endpoint", ts.URL} // Missing pipeline spec file and stdin.
+	args := []string{"pipeline-template", "save", "--gate.endpoint", ts.URL} // Missing pipeline spec file and stdin.
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -201,7 +201,7 @@ func TestPipelineTemplateSave_missingid(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -225,7 +225,7 @@ func TestPipelineTemplateSave_missingschema(t *testing.T) {
 	}
 	defer os.Remove(tempFile.Name())
 
-	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate-endpoint", ts.URL}
+	args := []string{"pipeline-template", "save", "--file", tempFile.Name(), "--gate.endpoint", ts.URL}
 	currentCmd := NewSaveCmd(pipelineTemplateOptions{})
 	rootCmd := getRootCmdForTest()
 	pipelineTemplateCmd := NewPipelineTemplateCmd(os.Stdout)
@@ -254,6 +254,9 @@ func tempPipelineTemplateFile(pipelineContent string) *os.File {
 // and Accepts POST calls.
 func gateServerUpdateSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "{}")
+	}))
 	mux.Handle("/v2/pipelineTemplates/update/testSpelTemplate", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
@@ -273,6 +276,9 @@ func gateServerUpdateSuccess() *httptest.Server {
 // and Accepts POST calls.
 func gateServerCreateSuccess() *httptest.Server {
 	mux := http.NewServeMux()
+	mux.Handle("/version", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "{}")
+	}))
 	mux.Handle("/v2/pipelineTemplates/create", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost {
 			w.WriteHeader(http.StatusAccepted)
