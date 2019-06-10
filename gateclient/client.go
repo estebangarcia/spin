@@ -190,6 +190,17 @@ func NewGateClient() (*GatewayClient, error) {
 	}
 
 	return NewGateClientWithConfig(config)
+
+}
+
+// NewGateClient - Create new spinnaker gateway client get config from viper
+func NewGateClientFromFile(file string) (*GatewayClient, error) {
+	config, err := config.ParseFromFile(file)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewGateClientWithConfig(config)
 }
 
 func createClient(config config.Config) (*GatewayClient, error) {
