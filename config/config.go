@@ -22,8 +22,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/spf13/viper"
 	"github.com/estebangarcia/spin/config/auth"
+	"github.com/hashicorp/terraform/config"
+	"github.com/spf13/viper"
 )
 
 // Config is the CLI configuration kept in '~/.spin/config'.
@@ -66,6 +67,12 @@ func Parse() (Config, error) {
 }
 
 func ParseFromFile(file string) (Config, error) {
+
+	if len(viper.AllKeys()) == 0 {
+		flagSet := GeneratePFlagsFromStruct(&config.Config{}, "")
+		viper.BindPFlags(flagSet)
+	}
+
 	viper.SetEnvPrefix("spin")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))

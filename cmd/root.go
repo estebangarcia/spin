@@ -5,14 +5,14 @@ import (
 
 	"github.com/estebangarcia/spin/config"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/estebangarcia/spin/cmd/application"
 	"github.com/estebangarcia/spin/cmd/pipeline"
 	pipeline_template "github.com/estebangarcia/spin/cmd/pipeline-template"
 	"github.com/estebangarcia/spin/cmd/project"
 	"github.com/estebangarcia/spin/util"
 	"github.com/estebangarcia/spin/version"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func Execute(out io.Writer) error {
@@ -35,7 +35,7 @@ func NewCmdRoot(out io.Writer) *cobra.Command {
 
 	flagSet := config.GeneratePFlagsFromStruct(&config.Config{}, "")
 	cmd.PersistentFlags().AddFlagSet(flagSet)
-	viper.BindPFlags(cmd.PersistentFlags())
+	viper.BindPFlags(flagSet)
 
 	// create subcommands
 	cmd.AddCommand(application.NewApplicationCmd(out))
