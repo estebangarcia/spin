@@ -55,7 +55,7 @@ func GeneratePFlagsFromStruct(iface interface{}, prefix string) *pflag.FlagSet {
 		ift = ift.Elem()
 	}
 
-	if ift.PkgPath() != "" && !strings.Contains(ift.PkgPath(), "spinnaker") {
+	if ift.PkgPath() != "" && !strings.Contains(ift.PkgPath(), "estebangarcia") {
 		return set
 	}
 
