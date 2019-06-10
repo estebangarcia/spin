@@ -1,4 +1,4 @@
-module github.com/spinnaker/spin
+module github.com/estebangarcia/spin
 
 go 1.12
 

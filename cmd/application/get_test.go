@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"github.com/spf13/viper"
-	"github.com/spinnaker/spin/config"
+	"github.com/estebangarcia/spin/config"
 
-	"github.com/spinnaker/spin/util"
+	"github.com/estebangarcia/spin/util"
 
 	"github.com/spf13/cobra"
 )

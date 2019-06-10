@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"github.com/spinnaker/spin/config/auth"
+	"github.com/estebangarcia/spin/config/auth"
 )
 
 // Config is the CLI configuration kept in '~/.spin/config'.

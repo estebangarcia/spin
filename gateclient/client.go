@@ -31,11 +31,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/spinnaker/spin/config"
-	"github.com/spinnaker/spin/config/auth"
-	iap "github.com/spinnaker/spin/config/auth/iap"
-	"github.com/spinnaker/spin/util"
-	"github.com/spinnaker/spin/version"
+	"github.com/estebangarcia/spin/config"
+	"github.com/estebangarcia/spin/config/auth"
+	iap "github.com/estebangarcia/spin/config/auth/iap"
+	"github.com/estebangarcia/spin/util"
+	"github.com/estebangarcia/spin/version"
 
 	"github.com/mitchellh/go-homedir"
 	"gopkg.in/yaml.v2"
@@ -43,7 +43,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 
-	gate "github.com/spinnaker/spin/gateapi"
+	gate "github.com/estebangarcia/spin/gateapi"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )

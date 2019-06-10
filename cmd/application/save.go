@@ -20,9 +20,9 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/gateclient"
-	orca_tasks "github.com/spinnaker/spin/cmd/orca-tasks"
-	"github.com/spinnaker/spin/util"
+	"github.com/estebangarcia/spin/gateclient"
+	orca_tasks "github.com/estebangarcia/spin/cmd/orca-tasks"
+	"github.com/estebangarcia/spin/util"
 )
 
 type SaveOptions struct {

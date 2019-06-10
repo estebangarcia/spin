@@ -4,7 +4,7 @@ import (
 	"io"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/cmd/pipeline/execution"
+	"github.com/estebangarcia/spin/cmd/pipeline/execution"
 )
 
 type pipelineOptions struct{}

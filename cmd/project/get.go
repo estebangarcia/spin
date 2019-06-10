@@ -18,10 +18,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/spinnaker/spin/util"
+	"github.com/estebangarcia/spin/util"
 
 	"github.com/spf13/cobra"
-	"github.com/spinnaker/spin/gateclient"
+	"github.com/estebangarcia/spin/gateclient"
 )
 
 type GetOptions struct {

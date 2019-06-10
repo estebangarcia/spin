@@ -3,16 +3,16 @@ package cmd
 import (
 	"io"
 
-	"github.com/spinnaker/spin/config"
+	"github.com/estebangarcia/spin/config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/spinnaker/spin/cmd/application"
-	"github.com/spinnaker/spin/cmd/pipeline"
-	pipeline_template "github.com/spinnaker/spin/cmd/pipeline-template"
-	"github.com/spinnaker/spin/cmd/project"
-	"github.com/spinnaker/spin/util"
-	"github.com/spinnaker/spin/version"
+	"github.com/estebangarcia/spin/cmd/application"
+	"github.com/estebangarcia/spin/cmd/pipeline"
+	pipeline_template "github.com/estebangarcia/spin/cmd/pipeline-template"
+	"github.com/estebangarcia/spin/cmd/project"
+	"github.com/estebangarcia/spin/util"
+	"github.com/estebangarcia/spin/version"
 )
 
 func Execute(out io.Writer) error {

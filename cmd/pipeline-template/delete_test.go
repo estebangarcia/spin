@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 
-	gate "github.com/spinnaker/spin/gateapi"
+	gate "github.com/estebangarcia/spin/gateapi"
 )
 
 func TestPipelineTemplateDelete_basic(t *testing.T) {
